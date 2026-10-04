@@ -166,7 +166,7 @@ jobs:
             
           make -j$(nproc)
 
-          ls -lha $(pwd)/Release | true
+          ls -lha $(pwd)/Release || true
           
       - name: Upload Blender Dependencies Artifact
         uses: actions/upload-artifact@v4
