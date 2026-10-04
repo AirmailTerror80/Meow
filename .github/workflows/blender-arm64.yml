@@ -10,8 +10,9 @@ jobs:
     steps:
       - name: Install Host-side Packages
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake build-essential git ccache clang lld \
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -ydd --no-install-recommends \
+            cmake build-essential git ccache clang lld \
             libx11-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev \
             libxxf86vm-dev libxfixes-dev libegl-dev wayland-protocols libpulse-dev \
             libwayland-dev libxkbcommon-dev libdbus-1-dev curl unzip libomp-dev
@@ -36,10 +37,10 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repo: AirmailTerror80/Meow.
-          run_id: 37148520937
+          run_id: 37182698865
           path: ${{ github.workspace }}/build_deps/Release
 
-      - name: Unpack Dependencies
+      - name: Fix Perms
         run: |
           export LIBDIR="${{ github.workspace }}/build_deps/Release"
           find "$LIBDIR" -type f \( -path "*/bin/*" -o -name "*.so*" -o -name "*.sh" \) -exec chmod +x {} +
@@ -90,13 +91,9 @@ jobs:
           ln -sf /usr/bin/ld.lld $(pwd)/bin/aarch64-linux-gnu-ld
           
           export PATH="$(pwd)/bin:/usr/lib/ccache:$PATH"
-
-          export PKG_CONFIG_PATH="$(find "$LIBDIR" -type d -name 'pkgconfig' -exec printf '%s:' {} +)$PKG_CONFIG_PATH"
-          
-          #echo "target_link_libraries(blender PRIVATE -fopenmp \"$LIBDIR/x265/lib/libx265.a\" \"$LIBDIR/x264/lib/libx264.a\" \"$LIBDIR/aom/lib/libaom.a\" \"$LIBDIR/vpx/lib/libvpx.a\" \"$LIBDIR/tiff/lib/libtiff.a\" \"$LIBDIR/deflate/lib/libdeflate.a\")" >> blender/source/creator/CMakeLists.txt
           
           mkdir -p build_blender && cd build_blender
-                   
+          
           cmake ../blender \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
