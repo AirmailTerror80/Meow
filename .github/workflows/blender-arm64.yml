@@ -95,7 +95,7 @@ jobs:
           export CPLUS_INCLUDE_PATH="$LIBDIR/imath/include:$LIBDIR/openexr/include:$LIBDIR/openimageio/include"
           export C_INCLUDE_PATH="$LIBDIR/imath/include:$LIBDIR/openexr/include:$LIBDIR/openimageio/include"
           
-          echo "target_link_libraries(blender PRIVATE -fopenmp \"$LIBDIR/x265/lib/libx265.a\" \"$LIBDIR/x264/lib/libx264.a\" \"$LIBDIR/aom/lib/libaom.a\" \"$LIBDIR/vpx/lib/libvpx.a\" \"$LIBDIR/tiff/lib/libtiff.a\" \"$LIBDIR/deflate/lib/libdeflate.a\")" >> ../blender/source/creator/CMakeLists.txt
+          echo "target_link_libraries(blender PRIVATE -fopenmp \"$LIBDIR/x265/lib/libx265.a\" \"$LIBDIR/x264/lib/libx264.a\" \"$LIBDIR/aom/lib/libaom.a\" \"$LIBDIR/vpx/lib/libvpx.a\" \"$LIBDIR/tiff/lib/libtiff.a\" \"$LIBDIR/deflate/lib/libdeflate.a\")" >> blender/source/creator/CMakeLists.txt
           
           FREETYPE_STATIC_LIB="$LIBDIR/freetype/lib/libfreetype2ST.a"
           
