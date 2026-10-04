@@ -37,8 +37,8 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repo: AirmailTerror80/Meow.
-          run_id: 37182698865
-          path: ${{ github.workspace }}/build_deps/Release
+          run_id: 37193281352
+          path: ${{ github.workspace }}/build_deps
 
       - name: Fix Perms
         run: |
