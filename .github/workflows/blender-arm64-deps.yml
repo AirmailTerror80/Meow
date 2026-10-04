@@ -155,7 +155,7 @@ jobs:
 
           export CC=clang
           export CXX=clang++
-                   
+          
           cmake ../blender/build_files/build_environment \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=clang \
@@ -166,7 +166,7 @@ jobs:
             
           make -j$(nproc)
 
-          ls -lha $(pwd)/build_deps/Release
+          ls -lha $(pwd)/Release | true
           
       - name: Upload Blender Dependencies Artifact
         uses: actions/upload-artifact@v4
