@@ -92,14 +92,13 @@ jobs:
           
           export PATH="$(pwd)/bin:/usr/lib/ccache:$PATH"
           
-          find "$LIBDIR" -name "*.pc" | while read -r pc_file; do
-            PKG_DIR=$(dirname $(dirname $(dirname "$pc_file")))
-            sed -i -E "s|^prefix=.*|prefix=$PKG_DIR|g" "$pc_file"
-          done
-          export PKG_CONFIG_PATH="$(find "$LIBDIR" -type d -name 'pkgconfig' -exec printf '%s:' {} +)$PKG_CONFIG_PATH"
+          export CPLUS_INCLUDE_PATH="$LIBDIR/imath/include:$LIBDIR/openexr/include:$LIBDIR/openimageio/include"
+          export C_INCLUDE_PATH="$LIBDIR/imath/include:$LIBDIR/openexr/include:$LIBDIR/openimageio/include"
           
-          export CMAKE_PREFIX_PATH="$LIBDIR;$(find "$LIBDIR" -mindepth 1 -maxdepth 1 -type d -exec printf '%s;' {} +)"
-
+          echo "target_link_libraries(blender PRIVATE -fopenmp \"$LIBDIR/x265/lib/libx265.a\" \"$LIBDIR/x264/lib/libx264.a\" \"$LIBDIR/aom/lib/libaom.a\" \"$LIBDIR/vpx/lib/libvpx.a\" \"$LIBDIR/tiff/lib/libtiff.a\" \"$LIBDIR/deflate/lib/libdeflate.a\")" >> ../blender/source/creator/CMakeLists.txt
+          
+          FREETYPE_STATIC_LIB="$LIBDIR/freetype/lib/libfreetype2ST.a"
+          
           mkdir -p build_blender && cd build_blender
           
           cmake ../blender \
@@ -114,6 +113,11 @@ jobs:
             -DLIBDIR="$LIBDIR" \
             -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH" \
             -DPYTHON_VERSION=3.11 \
+            -DFREETYPE_LIBRARY="$FREETYPE_STATIC_LIB" \
+            -DFREETYPE_LIBRARY_RELEASE="$FREETYPE_STATIC_LIB" \
+            -DOPENEXR_INCLUDE_DIR="$LIBDIR/openexr/include" \
+            -DIMATH_INCLUDE_DIR="$LIBDIR/imath/include" \
+            -DOPENIMAGEIO_INCLUDE_DIR="$LIBDIR/openimageio/include" \
             -DWITH_INSTALL_PORTABLE=ON \
             -DWITH_CYCLES=ON \
             -DWITH_CYCLES_DEVICE_CUDA=OFF \
