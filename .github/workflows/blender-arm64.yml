@@ -91,6 +91,7 @@ jobs:
           ln -sf /usr/bin/ld.lld $(pwd)/bin/aarch64-linux-gnu-ld
           
           export PATH="$(pwd)/bin:/usr/lib/ccache:$PATH"
+          export PKG_CONFIG_PATH="$(find "$LIBDIR" -type d -name 'pkgconfig' -exec printf '%s:' {} +)$PKG_CONFIG_PATH"
           
           mkdir -p build_blender && cd build_blender
           
