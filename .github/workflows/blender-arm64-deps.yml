@@ -73,6 +73,13 @@ jobs:
           
           f="build_files/build_environment/cmake/gmmlib.cmake"
           [ -f "$f" ] && sed -i '/CMAKE_ARGS/a\    -DRUN_TEST_SUITE=OFF\n    -DRUN_ULT=OFF' "$f" || true
+
+          f="build_files/build_environment/cmake/usd.cmake"
+          if [ -f "$f" ]; then
+            sed -i 's/-DPXR_BUILD_IMAGING=OFF/-DPXR_BUILD_IMAGING=ON/g' "$f"
+            sed -i 's/-DPXR_BUILD_USD_IMAGING=OFF/-DPXR_BUILD_USD_IMAGING=ON/g' "$f"
+            sed -i 's/-DPXR_BUILD_USDVIEW=OFF/-DPXR_BUILD_USDVIEW=OFF\n    -DPXR_BUILD_IMAGING=ON\n    -DPXR_BUILD_USD_IMAGING=ON\n    -DPXR_BUILD_USD_SHADING=ON\n    -DPXR_BUILD_USD_HYDRA=ON/g' "$f" || true
+          fi
                     
           opt="build_files/build_environment/cmake/options.cmake"
           if [ -f "$opt" ]; then
@@ -141,7 +148,6 @@ jobs:
 
           for tool in ar ranlib nm strip objcopy objdump readelf size strings; do
             ln -sf "/usr/bin/llvm-$tool" "$(pwd)/bin/$tool"
-            # Trap configure scripts looking for architecture-prefixed tools!
             ln -sf "/usr/bin/llvm-$tool" "$(pwd)/bin/aarch64-linux-gnu-$tool"
           done
           
@@ -165,12 +171,17 @@ jobs:
             -DBUILD_SYCL=OFF
             
           make -j$(nproc)
-
           ls -lha $(pwd)/Release || true
-          
-      - name: Upload Blender Dependencies Artifact
-        uses: actions/upload-artifact@v4
+
+      - name: Create Release Tarball
+        run: |
+          cd build_deps
+          tar -cJf blender-deps-4.2-arm64.tar.xz Release
+          ls -lh blender-deps-4.2-arm64.tar.xz
+
+      - name: Upload To Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: Release
-          path: ${{ github.workspace }}/build_deps/Release
-          if-no-files-found: error
+          tag_name: arm64-deps-4.2
+          name: blender 4.2 arm64 deps
+          files: build_deps/blender-deps-4.2-arm64.tar.xz
