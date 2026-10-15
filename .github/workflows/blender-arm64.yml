@@ -30,7 +30,7 @@ jobs:
         run: |
           cd blender
           git config lfs.url "https://projects.blender.org/blender/blender.git/info/lfs"
-          git lfs pull
+          GIT_TERMINAL_PROMPT=0 git lfs pull || true
           
       - name: Fetch Dependencies
         run: |
