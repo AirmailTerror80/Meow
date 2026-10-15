@@ -79,6 +79,9 @@ jobs:
             sed -i 's/-DPXR_BUILD_IMAGING=OFF/-DPXR_BUILD_IMAGING=ON/g' "$f"
             sed -i 's/-DPXR_BUILD_USD_IMAGING=OFF/-DPXR_BUILD_USD_IMAGING=ON/g' "$f"
             sed -i 's/-DPXR_BUILD_USDVIEW=OFF/-DPXR_BUILD_USDVIEW=OFF\n    -DPXR_BUILD_IMAGING=ON\n    -DPXR_BUILD_USD_IMAGING=ON\n    -DPXR_BUILD_USD_SHADING=ON\n    -DPXR_BUILD_USD_HYDRA=ON/g' "$f" || true
+            
+            # ---> THE FIX: Inject Jinja2 installation into the USD build step directly <---
+            sed -i 's/ExternalProject_Add(external_usd/ExternalProject_Add(external_usd\n  UPDATE_COMMAND ${PYTHON_EXECUTABLE} -m pip install jinja2 markupsafe/g' "$f"
           fi
                     
           opt="build_files/build_environment/cmake/options.cmake"
@@ -91,7 +94,7 @@ jobs:
              tgt="build_files/build_environment/cmake/${intel_gpu_only}.cmake"
              [ -f "$tgt" ] && echo "add_custom_target(external_${intel_gpu_only})" > "$tgt" || true
           done
-
+          
       - name: Fetch CCache
         uses: hendrikmuhs/ccache-action@v1.2.23
         with:
@@ -155,7 +158,6 @@ jobs:
           ln -sf /usr/bin/ld.lld $(pwd)/bin/aarch64-linux-gnu-ld
           
           export PATH="$(pwd)/bin:/usr/lib/ccache:$PATH"
-          export PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH"
           export ISPC_EXTRA_ARGS="--target=neon --arch=aarch64"
           
           mkdir -p build_deps && cd build_deps
