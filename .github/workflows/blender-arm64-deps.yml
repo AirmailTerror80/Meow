@@ -80,8 +80,8 @@ jobs:
             sed -i 's/-DPXR_BUILD_USD_IMAGING=OFF/-DPXR_BUILD_USD_IMAGING=ON/g' "$f"
             sed -i 's/-DPXR_BUILD_USDVIEW=OFF/-DPXR_BUILD_USDVIEW=OFF\n    -DPXR_BUILD_IMAGING=ON\n    -DPXR_BUILD_USD_IMAGING=ON\n    -DPXR_BUILD_USD_SHADING=ON\n    -DPXR_BUILD_USD_HYDRA=ON/g' "$f" || true
             
-            # ---> THE FIX: Inject Jinja2 installation into the USD build step directly <---
-            sed -i 's/ExternalProject_Add(external_usd/ExternalProject_Add(external_usd\n  UPDATE_COMMAND ${PYTHON_EXECUTABLE} -m pip install jinja2 markupsafe/g' "$f"
+            # ---> THE FIX: Using PYTHON_BINARY <---
+            sed -i 's/ExternalProject_Add(external_usd/ExternalProject_Add(external_usd\n  UPDATE_COMMAND ${PYTHON_BINARY} -m pip install jinja2 markupsafe/g' "$f"
           fi
                     
           opt="build_files/build_environment/cmake/options.cmake"
