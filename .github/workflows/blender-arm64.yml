@@ -62,22 +62,32 @@ jobs:
           
           mkdir -p $(pwd)/bin
           
-          cat << 'EOF' > $(pwd)/bin/gcc
+          cat << 'EOF' > $(pwd)/bin/clang
           #!/bin/bash
-          exec ccache /usr/bin/gcc "$@"
+          exec ccache /usr/bin/clang "$@"
           EOF
-          chmod +x $(pwd)/bin/gcc
+          chmod +x $(pwd)/bin/clang
           
-          cat << 'EOF' > $(pwd)/bin/g++
+          cat << 'EOF' > $(pwd)/bin/clang++
           #!/bin/bash
-          exec ccache /usr/bin/g++ "$@"
+          exec ccache /usr/bin/clang++ "$@"
           EOF
-          chmod +x $(pwd)/bin/g++
+          chmod +x $(pwd)/bin/clang++
 
-          ln -sf $(pwd)/bin/gcc $(pwd)/bin/cc
-          ln -sf $(pwd)/bin/g++ $(pwd)/bin/c++
-          ln -sf $(pwd)/bin/gcc $(pwd)/bin/aarch64-linux-gnu-gcc
-          ln -sf $(pwd)/bin/g++ $(pwd)/bin/aarch64-linux-gnu-g++
+          ln -sf $(pwd)/bin/clang $(pwd)/bin/cc
+          ln -sf $(pwd)/bin/clang $(pwd)/bin/gcc
+          ln -sf $(pwd)/bin/clang++ $(pwd)/bin/c++
+          ln -sf $(pwd)/bin/clang++ $(pwd)/bin/g++
+          
+          ln -sf $(pwd)/bin/clang $(pwd)/bin/aarch64-linux-gnu-gcc
+          ln -sf $(pwd)/bin/clang $(pwd)/bin/aarch64-linux-gnu-cc
+          ln -sf $(pwd)/bin/clang++ $(pwd)/bin/aarch64-linux-gnu-g++
+          ln -sf $(pwd)/bin/clang++ $(pwd)/bin/aarch64-linux-gnu-c++
+          
+          for tool in ar ranlib nm strip objcopy objdump readelf size strings; do
+            ln -sf "/usr/bin/llvm-$tool" "$(pwd)/bin/$tool"
+            ln -sf "/usr/bin/llvm-$tool" "$(pwd)/bin/aarch64-linux-gnu-$tool"
+          done
           
           ln -sf /usr/bin/ld.lld $(pwd)/bin/ld
           ln -sf /usr/bin/ld.lld $(pwd)/bin/aarch64-linux-gnu-ld
@@ -110,8 +120,8 @@ jobs:
           mkdir -p build_blender && cd build_blender
           
           cmake ../blender \
-            -DCMAKE_C_COMPILER=gcc \
-            -DCMAKE_CXX_COMPILER=g++ \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
             -DCMAKE_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0" \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
@@ -138,7 +148,7 @@ jobs:
             
           make -j$(nproc)
           make install
-
+        
       - name: Create Release Tarball
         run: |
           cd build_blender
