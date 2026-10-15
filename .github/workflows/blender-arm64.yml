@@ -97,8 +97,6 @@ jobs:
           export CPLUS_INCLUDE_PATH="$LIBDIR/imath/include:$LIBDIR/openexr/include:$LIBDIR/openimageio/include"
           export C_INCLUDE_PATH="$LIBDIR/imath/include:$LIBDIR/openexr/include:$LIBDIR/openimageio/include"
           
-          export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
-          
           LINK_STR="-fopenmp -Wl,--no-as-needed"
           
           for lib in "$LIBDIR/usd/lib/libusd"*.a "$LIBDIR/usd/lib/libusd"*.so "$LIBDIR/tbb/lib/libtbb"*.so "$LIBDIR/tbb/lib/libtbb"*.a "$LIBDIR/materialx/lib/libMaterialXCore"*.so "$LIBDIR/materialx/lib/libMaterialXCore"*.a "$LIBDIR/materialx/lib/libMaterialXFormat"*.so "$LIBDIR/materialx/lib/libMaterialXFormat"*.a "$LIBDIR/x265/lib/libx265.a" "$LIBDIR/x264/lib/libx264.a" "$LIBDIR/aom/lib/libaom.a" "$LIBDIR/vpx/lib/libvpx.a" "$LIBDIR/tiff/lib/libtiff.a" "$LIBDIR/deflate/lib/libdeflate.a"; do
@@ -115,6 +113,9 @@ jobs:
           
           echo "target_link_libraries(blender PRIVATE $LINK_STR)" >> blender/source/creator/CMakeLists.txt
           
+          echo "target_compile_definitions(bf_io_usd PRIVATE _GLIBCXX_USE_CXX11_ABI=0)" >> blender/source/blender/io/usd/CMakeLists.txt
+          echo "target_compile_definitions(bf_render_hydra PRIVATE _GLIBCXX_USE_CXX11_ABI=0)" >> blender/source/blender/render/hydra/CMakeLists.txt
+          
           FREETYPE_STATIC_LIB="$LIBDIR/freetype/lib/libfreetype2ST.a"
           
           mkdir -p build_blender && cd build_blender
@@ -122,7 +123,6 @@ jobs:
           cmake ../blender \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
-            -DCMAKE_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0" \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld -Wl,--undefined-version" \
