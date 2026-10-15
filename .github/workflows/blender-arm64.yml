@@ -62,6 +62,7 @@ jobs:
           
           mkdir -p $(pwd)/bin
           
+          # Native Clang Wrappers
           cat << 'EOF' > $(pwd)/bin/clang
           #!/bin/bash
           exec ccache /usr/bin/clang "$@"
@@ -94,43 +95,25 @@ jobs:
           
           export PATH="$(pwd)/bin:/usr/lib/ccache:$PATH"
           
+         
           export CPLUS_INCLUDE_PATH="$LIBDIR/imath/include:$LIBDIR/openexr/include:$LIBDIR/openimageio/include"
           export C_INCLUDE_PATH="$LIBDIR/imath/include:$LIBDIR/openexr/include:$LIBDIR/openimageio/include"
-          
-          LINK_STR="-fopenmp -Wl,--no-as-needed"
-          
-          for lib in "$LIBDIR/usd/lib/libusd"*.a "$LIBDIR/usd/lib/libusd"*.so "$LIBDIR/tbb/lib/libtbb"*.so "$LIBDIR/tbb/lib/libtbb"*.a "$LIBDIR/materialx/lib/libMaterialXCore"*.so "$LIBDIR/materialx/lib/libMaterialXCore"*.a "$LIBDIR/materialx/lib/libMaterialXFormat"*.so "$LIBDIR/materialx/lib/libMaterialXFormat"*.a "$LIBDIR/x265/lib/libx265.a" "$LIBDIR/x264/lib/libx264.a" "$LIBDIR/aom/lib/libaom.a" "$LIBDIR/vpx/lib/libvpx.a" "$LIBDIR/tiff/lib/libtiff.a" "$LIBDIR/deflate/lib/libdeflate.a"; do
-            if [ -f "$lib" ]; then
-              if [[ "$lib" == *"libusd"*.a ]]; then
-                LINK_STR="$LINK_STR \"-Wl,--whole-archive\" \"$lib\" \"-Wl,--no-whole-archive\""
-              else
-                LINK_STR="$LINK_STR \"$lib\""
-              fi
-            fi
-          done
-          
-          LINK_STR="$LINK_STR -Wl,--as-needed \"-lGL\" \"-lX11\" \"-ldl\""
-          
-          echo "target_link_libraries(blender PRIVATE $LINK_STR)" >> blender/source/creator/CMakeLists.txt
-          
-          echo "target_compile_definitions(bf_io_usd PRIVATE _GLIBCXX_USE_CXX11_ABI=0)" >> blender/source/blender/io/usd/CMakeLists.txt
-          echo "target_compile_definitions(bf_render_hydra PRIVATE _GLIBCXX_USE_CXX11_ABI=0)" >> blender/source/blender/render/hydra/CMakeLists.txt
           
           FREETYPE_STATIC_LIB="$LIBDIR/freetype/lib/libfreetype2ST.a"
           
           mkdir -p build_blender && cd build_blender
-          
+         
           cmake ../blender \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld -Wl,--undefined-version" \
-            -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld -Wl,--undefined-version" \
-            -DCMAKE_MODULE_LINKER_FLAGS="-fuse-ld=lld -Wl,--undefined-version" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld -Wl,--undefined-version -Wl,--no-as-needed -Wl,--allow-shlib-undefined" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld -Wl,--undefined-version -Wl,--no-as-needed -Wl,--allow-shlib-undefined" \
+            -DCMAKE_MODULE_LINKER_FLAGS="-fuse-ld=lld -Wl,--undefined-version -Wl,--no-as-needed -Wl,--allow-shlib-undefined" \
             -DCMAKE_BUILD_TYPE=Release \
-            -DLIBDIR="$LIBDIR" \
-            -DCMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH" \
+            -DCMAKE_PREFIX_PATH="$LIBDIR" \
+            -DUSD_LIBRARY="$LIBDIR/usd/lib/libusd_ms.so" \
             -DPYTHON_VERSION=3.11 \
             -DFREETYPE_LIBRARY="$FREETYPE_STATIC_LIB" \
             -DFREETYPE_LIBRARY_RELEASE="$FREETYPE_STATIC_LIB" \
@@ -148,7 +131,7 @@ jobs:
             
           make -j$(nproc)
           make install
-        
+      
       - name: Create Release Tarball
         run: |
           cd build_blender
