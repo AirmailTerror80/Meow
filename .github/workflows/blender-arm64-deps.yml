@@ -127,15 +127,75 @@ jobs:
             ln -sf wrapper-stub.sh "bin/$cmd"
           done
           
+          # --- CLEAN CLANG WRAPPER ---
           cat << 'EOF' > $(pwd)/bin/clang
           #!/bin/bash
-          exec ccache /usr/bin/clang -Qunused-arguments "$@" -DHB_NO_PRAGMA_GCC_DIAGNOSTIC_ERROR -DHB_NO_PRAGMA_GCC_DIAGNOSTIC_WARNING -Wno-error=implicit-function-declaration -Wno-implicit-function-declaration -Wno-error=int-conversion -Wno-int-conversion -Wno-error=incompatible-function-pointer-types -Wno-incompatible-function-pointer-types -Wno-cast-function-type -Wno-cast-function-type-strict -Wno-error=cast-function-type-strict -Wno-unknown-warning-option
+          EXTRA_FLAGS=(
+              "-Qunused-arguments"
+              "-Wno-error=implicit-function-declaration"
+              "-Wno-implicit-function-declaration"
+              "-Wno-error=int-conversion"
+              "-Wno-int-conversion"
+              "-Wno-error=incompatible-function-pointer-types"
+              "-Wno-incompatible-function-pointer-types"
+              "-Wno-cast-function-type"
+              "-Wno-cast-function-type-strict"
+              "-Wno-error=cast-function-type-strict"
+              "-Wno-unknown-warning-option"
+              "-DHB_NO_PRAGMA_GCC_DIAGNOSTIC_ERROR"
+              "-DHB_NO_PRAGMA_GCC_DIAGNOSTIC_WARNING"
+          )
+          exec ccache /usr/bin/clang "${EXTRA_FLAGS[@]}" "$@"
           EOF
           chmod +x $(pwd)/bin/clang
 
+          # --- CLEAN CLANG++ WRAPPER WITH USD FIX ---
           cat << 'EOF' > $(pwd)/bin/clang++
           #!/bin/bash
-          exec ccache /usr/bin/clang++ -Qunused-arguments "$@" -DHB_NO_PRAGMA_GCC_DIAGNOSTIC_ERROR -DHB_NO_PRAGMA_GCC_DIAGNOSTIC_WARNING -Wno-error=implicit-function-declaration -Wno-implicit-function-declaration -Wno-error=int-conversion -Wno-int-conversion -Wno-error=incompatible-function-pointer-types -Wno-incompatible-function-pointer-types -Wno-error=enum-constexpr-conversion -Wno-changes-meaning -Wno-register -Wno-error=register -Wno-cast-function-type -Wno-cast-function-type-strict -Wno-error=cast-function-type-strict -fpermissive -Wno-unknown-warning-option
+          EXTRA_FLAGS=(
+              "-Qunused-arguments"
+              "-Wno-error=implicit-function-declaration"
+              "-Wno-implicit-function-declaration"
+              "-Wno-error=int-conversion"
+              "-Wno-int-conversion"
+              "-Wno-error=incompatible-function-pointer-types"
+              "-Wno-incompatible-function-pointer-types"
+              "-Wno-error=enum-constexpr-conversion"
+              "-Wno-changes-meaning"
+              "-Wno-register"
+              "-Wno-error=register"
+              "-Wno-cast-function-type"
+              "-Wno-cast-function-type-strict"
+              "-Wno-error=cast-function-type-strict"
+              "-fpermissive"
+              "-Wno-unknown-warning-option"
+              "-DHB_NO_PRAGMA_GCC_DIAGNOSTIC_ERROR"
+              "-DHB_NO_PRAGMA_GCC_DIAGNOSTIC_WARNING"
+          )
+          
+          # Safely detect Pixar's buggy monolithic linking step
+          IS_USD_MONOLITHIC=0
+          for arg in "$@"; do
+              if [[ "$arg" == *"libusd_ms.so"* ]]; then
+                  IS_USD_MONOLITHIC=1
+                  break
+              fi
+          done
+
+          # Surgically inject --whole-archive only for USD to prevent empty shell files
+          if [ "$IS_USD_MONOLITHIC" -eq 1 ]; then
+              NEW_ARGS=()
+              for arg in "$@"; do
+                  if [[ "$arg" == *".a" ]]; then
+                      NEW_ARGS+=("-Wl,--whole-archive" "$arg" "-Wl,--no-whole-archive")
+                  else
+                      NEW_ARGS+=("$arg")
+                  fi
+              done
+              exec ccache /usr/bin/clang++ "${EXTRA_FLAGS[@]}" "${NEW_ARGS[@]}"
+          else
+              exec ccache /usr/bin/clang++ "${EXTRA_FLAGS[@]}" "$@"
+          fi
           EOF
           chmod +x $(pwd)/bin/clang++
           
@@ -174,8 +234,9 @@ jobs:
             -DBUILD_SYCL=OFF
             
           make -j$(nproc)
-          ls -lha $(pwd)/Release || true
-
+          
+          ls -lhaR $(pwd)/Release
+         
       - name: Create Release Tarball
         run: |
           cd build_deps
