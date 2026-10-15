@@ -55,7 +55,7 @@ jobs:
           restore-keys: ccache-Linux-aarch64-blender-4.2-bin
           max-size: 2G
           create-symlink: true
-
+          
       - name: Build Blender
         run: |
           export LIBDIR="${{ github.workspace }}/build_deps/Release"
@@ -97,7 +97,7 @@ jobs:
           export CPLUS_INCLUDE_PATH="$LIBDIR/imath/include:$LIBDIR/openexr/include:$LIBDIR/openimageio/include"
           export C_INCLUDE_PATH="$LIBDIR/imath/include:$LIBDIR/openexr/include:$LIBDIR/openimageio/include"
           
-          echo "target_link_libraries(blender PRIVATE -fopenmp \"$LIBDIR/usd/lib/libusd_ms.so\" \"$LIBDIR/tbb/lib/libtbb.so\" \"$LIBDIR/materialx/lib/libMaterialXCore.so\" \"$LIBDIR/materialx/lib/libMaterialXFormat.so\" \"$LIBDIR/x265/lib/libx265.a\" \"$LIBDIR/x264/lib/libx264.a\" \"$LIBDIR/aom/lib/libaom.a\" \"$LIBDIR/vpx/lib/libvpx.a\" \"$LIBDIR/tiff/lib/libtiff.a\" \"$LIBDIR/deflate/lib/libdeflate.a\")" >> blender/source/creator/CMakeLists.txt
+          echo "target_link_libraries(blender PRIVATE -fopenmp \"$LIBDIR/usd/lib/libusd_ms.so\" \"$LIBDIR/usd/lib/libusdLux.a\" \"$LIBDIR/usd/lib/libusdGeom.a\" \"$LIBDIR/usd/lib/libusdVol.a\" \"$LIBDIR/usd/lib/libsdf.a\" \"$LIBDIR/usd/lib/libtf.a\" \"$LIBDIR/tbb/lib/libtbb.so\" \"$LIBDIR/materialx/lib/libMaterialXCore.so\" \"$LIBDIR/materialx/lib/libMaterialXFormat.so\" \"$LIBDIR/x265/lib/libx265.a\" \"$LIBDIR/x264/lib/libx264.a\" \"$LIBDIR/aom/lib/libaom.a\" \"$LIBDIR/vpx/lib/libvpx.a\" \"$LIBDIR/tiff/lib/libtiff.a\" \"$LIBDIR/deflate/lib/libdeflate.a\")" >> blender/source/creator/CMakeLists.txt
           
           FREETYPE_STATIC_LIB="$LIBDIR/freetype/lib/libfreetype2ST.a"
           
