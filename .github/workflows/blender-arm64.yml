@@ -31,14 +31,16 @@ jobs:
           cd blender
           git config lfs.url "https://projects.blender.org/blender/blender.git/info/lfs"
           git lfs pull
-
+          
       - name: Fetch Dependencies
-        uses: dawidd6/action-download-artifact@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repo: AirmailTerror80/Meow.
-          run_id: 37193281352
-          path: ${{ github.workspace }}/build_deps
+        run: |
+          mkdir -p ${{ github.workspace }}/build_deps
+          cd ${{ github.workspace }}/build_deps
+          
+          curl -L "https://github.com/AirmailTerror80/Meow/releases/download/arm64-deps-4.2/blender-deps-4.2-arm64.tar.xz" -o deps.tar.xz
+          
+          tar -xvf deps.tar.xz
+          rm deps.tar.xz
 
       - name: Fix Perms
         run: |
@@ -130,9 +132,16 @@ jobs:
           make -j$(nproc)
           make install
             
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+      - name: Create Release Tarball
+        run: |
+          cd build_blender
+          
+          tar -cJf blender-4.2-linux-arm64.tar.xz bin/
+          ls -lh blender-4.2-linux-arm64.tar.xz
+          
+      - name: Upload To Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: blender-4.2-aarch64-binary
-          path: build_blender/bin/
-          if-no-files-found: error
+          tag_name: blender-arm64-bin-4.2
+          name: blender 4.2 arm64 binary
+          files: build_blender/blender-4.2-linux-arm64.tar.xz
