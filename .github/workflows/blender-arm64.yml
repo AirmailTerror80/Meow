@@ -37,7 +37,7 @@ jobs:
           mkdir -p ${{ github.workspace }}/build_deps
           cd ${{ github.workspace }}/build_deps
           
-          curl -L "" -o deps.tar.xz
+          curl -L "https://github.com/AirmailTerror80/Meow/releases/download/arm64-deps-4.2/blender-deps-4.2-arm64.tar.xz" -o deps.tar.xz
           
           tar -xvf deps.tar.xz
           rm deps.tar.xz
