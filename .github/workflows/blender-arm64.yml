@@ -78,7 +78,7 @@ jobs:
           ln -sf $(pwd)/bin/g++ $(pwd)/bin/c++
           ln -sf $(pwd)/bin/gcc $(pwd)/bin/aarch64-linux-gnu-gcc
           ln -sf $(pwd)/bin/g++ $(pwd)/bin/aarch64-linux-gnu-g++
-         
+          
           ln -sf /usr/bin/ld.lld $(pwd)/bin/ld
           ln -sf /usr/bin/ld.lld $(pwd)/bin/aarch64-linux-gnu-ld
           
@@ -87,7 +87,9 @@ jobs:
           export CPLUS_INCLUDE_PATH="$LIBDIR/imath/include:$LIBDIR/openexr/include:$LIBDIR/openimageio/include"
           export C_INCLUDE_PATH="$LIBDIR/imath/include:$LIBDIR/openexr/include:$LIBDIR/openimageio/include"
           
-          LINK_STR="-fopenmp"
+          export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
+          
+          LINK_STR="-fopenmp -Wl,--no-as-needed"
           
           for lib in "$LIBDIR/usd/lib/libusd"*.a "$LIBDIR/usd/lib/libusd"*.so "$LIBDIR/tbb/lib/libtbb"*.so "$LIBDIR/tbb/lib/libtbb"*.a "$LIBDIR/materialx/lib/libMaterialXCore"*.so "$LIBDIR/materialx/lib/libMaterialXCore"*.a "$LIBDIR/materialx/lib/libMaterialXFormat"*.so "$LIBDIR/materialx/lib/libMaterialXFormat"*.a "$LIBDIR/x265/lib/libx265.a" "$LIBDIR/x264/lib/libx264.a" "$LIBDIR/aom/lib/libaom.a" "$LIBDIR/vpx/lib/libvpx.a" "$LIBDIR/tiff/lib/libtiff.a" "$LIBDIR/deflate/lib/libdeflate.a"; do
             if [ -f "$lib" ]; then
@@ -99,7 +101,7 @@ jobs:
             fi
           done
           
-          LINK_STR="$LINK_STR \"-lGL\" \"-lX11\" \"-ldl\""
+          LINK_STR="$LINK_STR -Wl,--as-needed \"-lGL\" \"-lX11\" \"-ldl\""
           
           echo "target_link_libraries(blender PRIVATE $LINK_STR)" >> blender/source/creator/CMakeLists.txt
           
@@ -110,6 +112,7 @@ jobs:
           cmake ../blender \
             -DCMAKE_C_COMPILER=gcc \
             -DCMAKE_CXX_COMPILER=g++ \
+            -DCMAKE_CXX_FLAGS="-D_GLIBCXX_USE_CXX11_ABI=0" \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld -Wl,--undefined-version" \
@@ -135,7 +138,7 @@ jobs:
             
           make -j$(nproc)
           make install
-            
+
       - name: Create Release Tarball
         run: |
           cd build_blender
