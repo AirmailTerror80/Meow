@@ -24,7 +24,7 @@ jobs:
             build-essential cmake ccache git subversion curl xz-utils bzip2 patch \
             bison yasm tcl autoconf automake m4 meson python3-mako patchelf gettext autopoint \
             pkg-config ninja-build xutils-dev xsltproc xmlto python3-docutils \
-            clang llvm lld libomp-dev libwayland-dev wayland-protocols  \
+            clang llvm lld libomp-dev libwayland-dev wayland-protocols python3-jinja2 python3-markupsafe \
             libx11-dev libxxf86vm-dev libxcursor-dev libxi-dev libxrandr-dev \
             libxinerama-dev libegl-dev libxkbcommon-dev libdbus-1-dev \
             linux-libc-dev libpulse-dev libasound2-dev libjack-dev libpipewire-0.3-dev \
@@ -155,6 +155,7 @@ jobs:
           ln -sf /usr/bin/ld.lld $(pwd)/bin/aarch64-linux-gnu-ld
           
           export PATH="$(pwd)/bin:/usr/lib/ccache:$PATH"
+          export PYTHONPATH="/usr/lib/python3/dist-packages:$PYTHONPATH"
           export ISPC_EXTRA_ARGS="--target=neon --arch=aarch64"
           
           mkdir -p build_deps && cd build_deps
