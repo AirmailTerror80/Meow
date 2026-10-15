@@ -62,7 +62,6 @@ jobs:
           
           mkdir -p $(pwd)/bin
           
-          # Native Clang Wrappers
           cat << 'EOF' > $(pwd)/bin/clang
           #!/bin/bash
           exec ccache /usr/bin/clang "$@"
@@ -95,9 +94,10 @@ jobs:
           
           export PATH="$(pwd)/bin:/usr/lib/ccache:$PATH"
           
-         
           export CPLUS_INCLUDE_PATH="$LIBDIR/imath/include:$LIBDIR/openexr/include:$LIBDIR/openimageio/include"
           export C_INCLUDE_PATH="$LIBDIR/imath/include:$LIBDIR/openexr/include:$LIBDIR/openimageio/include"
+          
+          echo "target_link_libraries(blender PRIVATE -fopenmp \"$LIBDIR/haru/lib/libhpdfs.a\" \"$LIBDIR/tiff/lib/libtiff.a\" \"$LIBDIR/x265/lib/libx265.a\" \"$LIBDIR/x264/lib/libx264.a\" \"$LIBDIR/aom/lib/libaom.a\" \"$LIBDIR/vpx/lib/libvpx.a\" \"$LIBDIR/deflate/lib/libdeflate.a\")" >> blender/source/creator/CMakeLists.txt
           
           FREETYPE_STATIC_LIB="$LIBDIR/freetype/lib/libfreetype2ST.a"
           
