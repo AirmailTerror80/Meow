@@ -1,4 +1,4 @@
-name: Build Blender Deps 5.2
+name: Build Blender Deps
 
 on:
   workflow_dispatch:
@@ -20,22 +20,13 @@ jobs:
         run: |
           sudo dpkg --add-architecture armhf
           sudo apt-get update -qq
+          
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -yqq --no-install-recommends \
             build-essential cmake ccache git subversion curl xz-utils bzip2 patch \
-            bison yasm tcl autoconf automake m4 meson python3-mako patchelf gettext autopoint \
-            pkg-config ninja-build xutils-dev xsltproc xmlto python3-docutils \
-            clang llvm lld libomp-dev libwayland-dev wayland-protocols python3-jinja2 python3-markupsafe \
-            libx11-dev libxxf86vm-dev libxcursor-dev libxi-dev libxrandr-dev \
-            libxinerama-dev libegl-dev libxkbcommon-dev libdbus-1-dev libvulkan-dev vulkan-tools \
-            linux-libc-dev libpulse-dev libasound2-dev libjack-dev libpipewire-0.3-dev \
-            libtool libtool-bin autotools-dev uuid-dev libpixman-1-dev texinfo \
-            libgles-dev libgl1-mesa-dev libgl-dev libdrm-dev libgbm-dev help2man flex \
-            libudev-dev libinput-dev libevdev-dev libmtdev-dev libseat-dev \
-            libffi-dev libssl-dev zlib1g-dev libsqlite3-dev \
-            libx11-xcb-dev libxcb-dri3-dev libxcb-present-dev libxrender-dev \
-            libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxcb-xkb-dev libxcb-keysyms1-dev \
-            libsystemd-dev libpam0g-dev xwayland libcairo2-dev libpango1.0-dev \
-            libxt-dev libsm-dev libice-dev libxaw7-dev libxpm-dev libxshmfence-dev \
+            bison yasm tcl autoconf automake m4 meson patchelf gettext autopoint \
+            pkg-config ninja-build xutils-dev xsltproc xmlto help2man flex \
+            clang llvm lld \
+            python3-jinja2 python3-markupsafe python3-mako python3-docutils \
             libc6-dev-armhf-cross linux-libc-dev-armhf-cross gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
 
       - name: Target Compatibility Patches
@@ -166,7 +157,7 @@ jobs:
           export CC=clang
           export CXX=clang++
           
-          export LD_LIBRARY_PATH="$(pwd)/Release/python/lib:$(pwd)/Release/sqlite/lib:$(pwd)/Release/zlib/lib:$(pwd)/Release/ssl/lib:$LD_LIBRARY_PATH"
+          export LD_LIBRARY_PATH="$(pwd)/Release/python/lib:$(pwd)/Release/python/lib64:$(pwd)/Release/sqlite/lib:$(pwd)/Release/zlib/lib:$(pwd)/Release/ssl/lib:$LD_LIBRARY_PATH"
           
           cmake ../blender/build_files/build_environment \
             -G Ninja \
@@ -177,7 +168,11 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DBUILD_SYCL=OFF
             
-          ninja
+          echo "check py"
+          ldd $(pwd)/Release/python/bin/python3.13 || true
+          $(pwd)/Release/python/bin/python3.13 --version || true
+            
+          ninja -j$(nproc)
          
       - name: Create Release Tarball
         run: |
