@@ -108,9 +108,9 @@ jobs:
             -DCMAKE_CXX_COMPILER=clang++ \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld -Wl,--undefined-version -Wl,--no-as-needed -Wl,--allow-shlib-undefined" \
-            -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld -Wl,--undefined-version -Wl,--no-as-needed -Wl,--allow-shlib-undefined" \
-            -DCMAKE_MODULE_LINKER_FLAGS="-fuse-ld=lld -Wl,--undefined-version -Wl,--no-as-needed -Wl,--allow-shlib-undefined" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld -Wl,--undefined-version -Wl,--no-as-needed -Wl,--allow-shlib-undefined -Wl,--warn-unresolved-symbols" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld -Wl,--undefined-version -Wl,--no-as-needed -Wl,--allow-shlib-undefined -Wl,--warn-unresolved-symbols" \
+            -DCMAKE_MODULE_LINKER_FLAGS="-fuse-ld=lld -Wl,--undefined-version -Wl,--no-as-needed -Wl,--allow-shlib-undefined -Wl,--warn-unresolved-symbols" \
             -DCMAKE_BUILD_TYPE=Release \
             -DLIBDIR="$LIBDIR" \
             -DCMAKE_PREFIX_PATH="$LIBDIR" \
