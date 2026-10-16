@@ -1,4 +1,4 @@
-name: Build Blender Deps 5.2
+name: Build Blender Deps
 
 on:
   workflow_dispatch:
@@ -28,8 +28,8 @@ jobs:
             libx11-dev libxxf86vm-dev libxcursor-dev libxi-dev libxrandr-dev \
             libxinerama-dev libegl-dev libxkbcommon-dev libdbus-1-dev libvulkan-dev vulkan-tools \
             linux-libc-dev libpulse-dev libasound2-dev libjack-dev libpipewire-0.3-dev \
-            libtool libtool-bin autotools-dev uuid-dev libpixman-1-dev \
-            libgles-dev libgl1-mesa-dev libgl-dev libdrm-dev libgbm-dev \
+            libtool libtool-bin autotools-dev uuid-dev libpixman-1-dev texinfo \
+            libgles-dev libgl1-mesa-dev libgl-dev libdrm-dev libgbm-dev help2man flex \
             libudev-dev libinput-dev libevdev-dev libmtdev-dev libseat-dev \
             libx11-xcb-dev libxcb-dri3-dev libxcb-present-dev libxrender-dev \
             libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxcb-xkb-dev libxcb-keysyms1-dev \
@@ -55,9 +55,6 @@ jobs:
             -e 's/-DOIDN_DEVICE_CUDA=ON/-DOIDN_DEVICE_CUDA=OFF/g' \
             {} +
             
-          #f="build_files/build_environment/cmake/flex.cmake"
-          #[ -f "$f" ] && sed -i 's/--build=aarch64-unknown-linux-gnu/--build=aarch64-unknown-linux-gnu ac_cv_func_reallocarray=yes/g' "$f" || true
-          
           #f="build_files/build_environment/cmake/ispc.cmake"
           #[ -f "$f" ] && sed -i '/CMAKE_ARGS/a\    -DX86_ENABLED=OFF\n    -DWEBASSEMBLY_ENABLED=OFF' "$f" || true
           
