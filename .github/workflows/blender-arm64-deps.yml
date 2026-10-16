@@ -1,4 +1,4 @@
-name: Build Blender Deps
+name: Build Blender Deps 5.2
 
 on:
   workflow_dispatch:
@@ -31,6 +31,7 @@ jobs:
             libtool libtool-bin autotools-dev uuid-dev libpixman-1-dev texinfo \
             libgles-dev libgl1-mesa-dev libgl-dev libdrm-dev libgbm-dev help2man flex \
             libudev-dev libinput-dev libevdev-dev libmtdev-dev libseat-dev \
+            libffi-dev libssl-dev zlib1g-dev libsqlite3-dev \
             libx11-xcb-dev libxcb-dri3-dev libxcb-present-dev libxrender-dev \
             libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxcb-xkb-dev libxcb-keysyms1-dev \
             libsystemd-dev libpam0g-dev xwayland libcairo2-dev libpango1.0-dev \
@@ -54,20 +55,6 @@ jobs:
             -e 's/-DOIDN_DEVICE_HIP=ON/-DOIDN_DEVICE_HIP=OFF/g' \
             -e 's/-DOIDN_DEVICE_CUDA=ON/-DOIDN_DEVICE_CUDA=OFF/g' \
             {} +
-            
-          #f="build_files/build_environment/cmake/ispc.cmake"
-          #[ -f "$f" ] && sed -i '/CMAKE_ARGS/a\    -DX86_ENABLED=OFF\n    -DWEBASSEMBLY_ENABLED=OFF' "$f" || true
-          
-          #f="build_files/build_environment/cmake/gmp.cmake"
-          #[ -f "$f" ] && sed -i 's/--disable-assembly/--disable-assembly --disable-fat/g' "$f" || true
-          
-          #f="build_files/build_environment/cmake/gmmlib.cmake"
-          #[ -f "$f" ] && sed -i '/CMAKE_ARGS/a\    -DRUN_TEST_SUITE=OFF\n    -DRUN_ULT=OFF' "$f" || true
-
-          #f="build_files/build_environment/cmake/usd.cmake"
-          #if [ -f "$f" ]; then
-            #sed -i 's/ExternalProject_Add(external_usd/ExternalProject_Add(external_usd\n  UPDATE_COMMAND ${PYTHON_BINARY} -m pip install jinja2 markupsafe/g' "$f"
-          #fi
           
           for intel_gpu_only in ocloc igc intel_compute_runtime dpcpp level_zero sycl; do
              tgt="build_files/build_environment/cmake/${intel_gpu_only}.cmake"
@@ -149,7 +136,7 @@ jobs:
               "-DHB_NO_PRAGMA_GCC_DIAGNOSTIC_ERROR"
               "-DHB_NO_PRAGMA_GCC_DIAGNOSTIC_WARNING"
           )
-              exec ccache /usr/bin/clang++ "${EXTRA_FLAGS[@]}" "$@"
+          exec ccache /usr/bin/clang++ "${EXTRA_FLAGS[@]}" "$@"
           EOF
           chmod +x $(pwd)/bin/clang++
           
@@ -179,7 +166,10 @@ jobs:
           export CC=clang
           export CXX=clang++
           
+          export LD_LIBRARY_PATH="$(pwd)/Release/python/lib:$(pwd)/Release/sqlite/lib:$(pwd)/Release/zlib/lib:$(pwd)/Release/ssl/lib:$LD_LIBRARY_PATH"
+          
           cmake ../blender/build_files/build_environment \
+            -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
@@ -187,7 +177,7 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DBUILD_SYCL=OFF
             
-          make -j$(nproc)
+          ninja
          
       - name: Create Release Tarball
         run: |
