@@ -1,4 +1,4 @@
-name: Build Blender Deps
+name: Build Blender Deps 5.2
 
 on:
   workflow_dispatch:
@@ -8,13 +8,13 @@ jobs:
     runs-on: ubuntu-24.04-arm
 
     steps:
-      - name: Checkout Blender
+      - name: Checkout Blender 5.2
         uses: actions/checkout@v4
         with:
           repository: blender/blender
           path: blender
           fetch-depth: 1
-          ref: blender-v4.2-release
+          ref: blender-v5.2-release
 
       - name: Install Host-side Packages
         run: |
@@ -26,7 +26,7 @@ jobs:
             pkg-config ninja-build xutils-dev xsltproc xmlto python3-docutils \
             clang llvm lld libomp-dev libwayland-dev wayland-protocols python3-jinja2 python3-markupsafe \
             libx11-dev libxxf86vm-dev libxcursor-dev libxi-dev libxrandr-dev \
-            libxinerama-dev libegl-dev libxkbcommon-dev libdbus-1-dev \
+            libxinerama-dev libegl-dev libxkbcommon-dev libdbus-1-dev libvulkan-dev vulkan-tools \
             linux-libc-dev libpulse-dev libasound2-dev libjack-dev libpipewire-0.3-dev \
             libtool libtool-bin autotools-dev uuid-dev libpixman-1-dev \
             libgles-dev libgl1-mesa-dev libgl-dev libdrm-dev libgbm-dev \
@@ -37,13 +37,6 @@ jobs:
             libxt-dev libsm-dev libice-dev libxaw7-dev libxpm-dev libxshmfence-dev \
             libc6-dev-armhf-cross linux-libc-dev-armhf-cross gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
 
-      - name: Pre-load Missing Archives 
-        run: |
-          mkdir -p build_deps/packages
-          curl -L "https://archive.mesa3d.org/glu/glu-9.0.1.tar.xz" -o build_deps/packages/glu-9.0.1.tar.xz
-          curl -L "https://archive.mesa3d.org/mesa-23.3.0.tar.xz" -o build_deps/packages/mesa-23.3.0.tar.xz
-          curl -L "https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz" -o build_deps/packages/gmp-6.2.1.tar.xz
-          
       - name: Target Compatibility Patches
         run: |
           cd blender
@@ -62,33 +55,22 @@ jobs:
             -e 's/-DOIDN_DEVICE_CUDA=ON/-DOIDN_DEVICE_CUDA=OFF/g' \
             {} +
             
-          f="build_files/build_environment/cmake/flex.cmake"
-          [ -f "$f" ] && sed -i 's/--build=aarch64-unknown-linux-gnu/--build=aarch64-unknown-linux-gnu ac_cv_func_reallocarray=yes/g' "$f" || true
+          #f="build_files/build_environment/cmake/flex.cmake"
+          #[ -f "$f" ] && sed -i 's/--build=aarch64-unknown-linux-gnu/--build=aarch64-unknown-linux-gnu ac_cv_func_reallocarray=yes/g' "$f" || true
           
-          f="build_files/build_environment/cmake/ispc.cmake"
-          [ -f "$f" ] && sed -i '/CMAKE_ARGS/a\    -DX86_ENABLED=OFF\n    -DWEBASSEMBLY_ENABLED=OFF' "$f" || true
+          #f="build_files/build_environment/cmake/ispc.cmake"
+          #[ -f "$f" ] && sed -i '/CMAKE_ARGS/a\    -DX86_ENABLED=OFF\n    -DWEBASSEMBLY_ENABLED=OFF' "$f" || true
           
-          f="build_files/build_environment/cmake/gmp.cmake"
-          [ -f "$f" ] && sed -i 's/--disable-assembly/--disable-assembly --disable-fat/g' "$f" || true
+          #f="build_files/build_environment/cmake/gmp.cmake"
+          #[ -f "$f" ] && sed -i 's/--disable-assembly/--disable-assembly --disable-fat/g' "$f" || true
           
-          f="build_files/build_environment/cmake/gmmlib.cmake"
-          [ -f "$f" ] && sed -i '/CMAKE_ARGS/a\    -DRUN_TEST_SUITE=OFF\n    -DRUN_ULT=OFF' "$f" || true
+          #f="build_files/build_environment/cmake/gmmlib.cmake"
+          #[ -f "$f" ] && sed -i '/CMAKE_ARGS/a\    -DRUN_TEST_SUITE=OFF\n    -DRUN_ULT=OFF' "$f" || true
 
-          f="build_files/build_environment/cmake/usd.cmake"
-          if [ -f "$f" ]; then
-            sed -i 's/-DPXR_BUILD_IMAGING=OFF/-DPXR_BUILD_IMAGING=ON/g' "$f"
-            sed -i 's/-DPXR_BUILD_USD_IMAGING=OFF/-DPXR_BUILD_USD_IMAGING=ON/g' "$f"
-            sed -i 's/-DPXR_BUILD_USDVIEW=OFF/-DPXR_BUILD_USDVIEW=OFF\n    -DPXR_BUILD_IMAGING=ON\n    -DPXR_BUILD_USD_IMAGING=ON\n    -DPXR_BUILD_USD_SHADING=ON\n    -DPXR_BUILD_USD_HYDRA=ON/g' "$f" || true
-            
-            # ---> THE FIX: Using PYTHON_BINARY <---
-            sed -i 's/ExternalProject_Add(external_usd/ExternalProject_Add(external_usd\n  UPDATE_COMMAND ${PYTHON_BINARY} -m pip install jinja2 markupsafe/g' "$f"
-          fi
-                    
-          opt="build_files/build_environment/cmake/options.cmake"
-          if [ -f "$opt" ]; then
-             echo 'set(PLATFORM_CFLAGS "${PLATFORM_CFLAGS} -fPIC -Wno-unknown-warning-option -Wno-implicit-function-declaration -Wno-error=implicit-function-declaration -Wno-int-conversion -Wno-error=int-conversion -Wno-incompatible-function-pointer-types -Wno-error=incompatible-function-pointer-types -Wno-implicit-int -Wno-error=implicit-int")' >> "$opt"
-             echo 'set(PLATFORM_CXXFLAGS "${PLATFORM_CXXFLAGS} -fPIC -fpermissive -Wno-unknown-warning-option -Wno-changes-meaning -Wno-error=changes-meaning -Wno-error=enum-constexpr-conversion")' >> "$opt"
-          fi
+          #f="build_files/build_environment/cmake/usd.cmake"
+          #if [ -f "$f" ]; then
+            #sed -i 's/ExternalProject_Add(external_usd/ExternalProject_Add(external_usd\n  UPDATE_COMMAND ${PYTHON_BINARY} -m pip install jinja2 markupsafe/g' "$f"
+          #fi
           
           for intel_gpu_only in ocloc igc intel_compute_runtime dpcpp level_zero sycl; do
              tgt="build_files/build_environment/cmake/${intel_gpu_only}.cmake"
@@ -98,8 +80,8 @@ jobs:
       - name: Fetch CCache
         uses: hendrikmuhs/ccache-action@v1.2.23
         with:
-          key: ${{ runner.os }}-aarch64-blender-4.2-deps
-          restore-keys: ccache-Linux-aarch64-blender-4.2-deps
+          key: ${{ runner.os }}-aarch64-blender-5.2-deps
+          restore-keys: ccache-Linux-aarch64-blender-5.2-deps
           max-size: 1G
           create-symlink: true
 
@@ -127,7 +109,6 @@ jobs:
             ln -sf wrapper-stub.sh "bin/$cmd"
           done
           
-          # --- CLEAN CLANG WRAPPER ---
           cat << 'EOF' > $(pwd)/bin/clang
           #!/bin/bash
           EXTRA_FLAGS=(
@@ -149,7 +130,6 @@ jobs:
           EOF
           chmod +x $(pwd)/bin/clang
 
-          # --- CLEAN CLANG++ WRAPPER WITH USD FIX ---
           cat << 'EOF' > $(pwd)/bin/clang++
           #!/bin/bash
           EXTRA_FLAGS=(
@@ -172,30 +152,7 @@ jobs:
               "-DHB_NO_PRAGMA_GCC_DIAGNOSTIC_ERROR"
               "-DHB_NO_PRAGMA_GCC_DIAGNOSTIC_WARNING"
           )
-          
-          # Safely detect Pixar's buggy monolithic linking step
-          IS_USD_MONOLITHIC=0
-          for arg in "$@"; do
-              if [[ "$arg" == *"libusd_ms.so"* ]]; then
-                  IS_USD_MONOLITHIC=1
-                  break
-              fi
-          done
-
-          # Surgically inject --whole-archive only for USD to prevent empty shell files
-          if [ "$IS_USD_MONOLITHIC" -eq 1 ]; then
-              NEW_ARGS=()
-              for arg in "$@"; do
-                  if [[ "$arg" == *".a" ]]; then
-                      NEW_ARGS+=("-Wl,--whole-archive" "$arg" "-Wl,--no-whole-archive")
-                  else
-                      NEW_ARGS+=("$arg")
-                  fi
-              done
-              exec ccache /usr/bin/clang++ "${EXTRA_FLAGS[@]}" "${NEW_ARGS[@]}"
-          else
               exec ccache /usr/bin/clang++ "${EXTRA_FLAGS[@]}" "$@"
-          fi
           EOF
           chmod +x $(pwd)/bin/clang++
           
@@ -234,18 +191,16 @@ jobs:
             -DBUILD_SYCL=OFF
             
           make -j$(nproc)
-          
-          ls -lhaR $(pwd)/Release
          
       - name: Create Release Tarball
         run: |
           cd build_deps
-          tar -cJf blender-deps-4.2-arm64.tar.xz Release
-          ls -lh blender-deps-4.2-arm64.tar.xz
+          tar -cJf blender-deps-5.2-arm64.tar.xz Release
+          ls -lh blender-deps-5.2-arm64.tar.xz
 
       - name: Upload To Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: arm64-deps-4.2
-          name: blender 4.2 arm64 deps
-          files: build_deps/blender-deps-4.2-arm64.tar.xz
+          tag_name: blender-arm64-deps-5.2
+          name: blender 5.2 arm64 deps
+          files: build_deps/blender-deps-5.2-arm64.tar.xz
