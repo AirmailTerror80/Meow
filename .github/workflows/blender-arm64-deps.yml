@@ -64,70 +64,15 @@ jobs:
         run: |
           mkdir -p $(pwd)/bin
           
-          cat << 'EOF' > $(pwd)/bin/wrapper-stub.sh
-          #!/bin/bash
-          if [[ "$PWD" == *"sqlite"* ]] || [[ "$PWD" == *"glu"* ]] || [[ "$PWD" == *"libglu"* ]]; then
-              exit 0
-          else
-              cmd="/usr/bin/$(basename $0)"
-              if [ -x "$cmd" ]; then
-                  exec "$cmd" "$@"
-              else
-                  echo "Missing original $(basename $0)!"
-                  exit 127
-              fi
-          fi
-          EOF
-          chmod +x $(pwd)/bin/wrapper-stub.sh
-          
-          for cmd in aclocal autoconf automake autoheader libtoolize autoreconf automake-1.15 aclocal-1.15 automake-1.16 aclocal-1.16 autom4te; do
-            ln -sf wrapper-stub.sh "bin/$cmd"
-          done
-          
           cat << 'EOF' > $(pwd)/bin/clang
           #!/bin/bash
-          EXTRA_FLAGS=(
-              "-Qunused-arguments"
-              "-Wno-error=implicit-function-declaration"
-              "-Wno-implicit-function-declaration"
-              "-Wno-error=int-conversion"
-              "-Wno-int-conversion"
-              "-Wno-error=incompatible-function-pointer-types"
-              "-Wno-incompatible-function-pointer-types"
-              "-Wno-cast-function-type"
-              "-Wno-cast-function-type-strict"
-              "-Wno-error=cast-function-type-strict"
-              "-Wno-unknown-warning-option"
-              "-DHB_NO_PRAGMA_GCC_DIAGNOSTIC_ERROR"
-              "-DHB_NO_PRAGMA_GCC_DIAGNOSTIC_WARNING"
-          )
-          exec ccache /usr/bin/clang "${EXTRA_FLAGS[@]}" "$@"
+          exec ccache /usr/bin/clang "$@"
           EOF
           chmod +x $(pwd)/bin/clang
 
           cat << 'EOF' > $(pwd)/bin/clang++
           #!/bin/bash
-          EXTRA_FLAGS=(
-              "-Qunused-arguments"
-              "-Wno-error=implicit-function-declaration"
-              "-Wno-implicit-function-declaration"
-              "-Wno-error=int-conversion"
-              "-Wno-int-conversion"
-              "-Wno-error=incompatible-function-pointer-types"
-              "-Wno-incompatible-function-pointer-types"
-              "-Wno-error=enum-constexpr-conversion"
-              "-Wno-changes-meaning"
-              "-Wno-register"
-              "-Wno-error=register"
-              "-Wno-cast-function-type"
-              "-Wno-cast-function-type-strict"
-              "-Wno-error=cast-function-type-strict"
-              "-fpermissive"
-              "-Wno-unknown-warning-option"
-              "-DHB_NO_PRAGMA_GCC_DIAGNOSTIC_ERROR"
-              "-DHB_NO_PRAGMA_GCC_DIAGNOSTIC_WARNING"
-          )
-          exec ccache /usr/bin/clang++ "${EXTRA_FLAGS[@]}" "$@"
+          exec ccache /usr/bin/clang++ "$@"
           EOF
           chmod +x $(pwd)/bin/clang++
           
@@ -157,8 +102,6 @@ jobs:
           export CC=clang
           export CXX=clang++
           
-          export LD_LIBRARY_PATH="$(pwd)/Release/python/lib:$(pwd)/Release/python/lib64:$(pwd)/Release/sqlite/lib:$(pwd)/Release/zlib/lib:$(pwd)/Release/ssl/lib:$LD_LIBRARY_PATH"
-          
           cmake ../blender/build_files/build_environment \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
@@ -168,12 +111,21 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DBUILD_SYCL=OFF
             
-          # The Ultimate Python Trap
           ninja -j$(nproc) || {
-              echo "ldd output(py):"
-              ldd $(pwd)/Release/python/bin/python3.13 || true
-              echo "execution(py)"
-              $(pwd)/Release/python/bin/python3.13 -c "print('test1')" || true
+              PY_BIN="$(pwd)/Release/python/bin/python3.13"
+              
+              echo "does exist(py)?"
+              ls -lh $PY_BIN 2>&1 || true
+              
+              echo "file(py)"
+              file $PY_BIN 2>&1 || true
+              
+              echo "ldd(py)"
+              ldd $PY_BIN 2>&1 || true
+              
+              echo "exec (py)"
+              $PY_BIN -V 2>&1 || true
+              
               exit 1
           }
          
