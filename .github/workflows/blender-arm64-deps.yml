@@ -168,11 +168,14 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DBUILD_SYCL=OFF
             
-          echo "check py"
-          ldd $(pwd)/Release/python/bin/python3.13 || true
-          $(pwd)/Release/python/bin/python3.13 --version || true
-            
-          ninja -j$(nproc)
+          # The Ultimate Python Trap
+          ninja -j$(nproc) || {
+              echo "ldd output(py):"
+              ldd $(pwd)/Release/python/bin/python3.13 || true
+              echo "execution(py)"
+              $(pwd)/Release/python/bin/python3.13 -c "print('test1')" || true
+              exit 1
+          }
          
       - name: Create Release Tarball
         run: |
