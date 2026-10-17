@@ -111,21 +111,16 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DBUILD_SYCL=OFF
             
+          echo "__PY__"
+          ninja external_python || {
+              echo "py build failure"
+              exit 1
+          }
+          
+          echo "__OTHERS__"
           ninja -j$(nproc) || {
-              PY_BIN="$(pwd)/Release/python/bin/python3.13"
-              
-              echo "does exist(py)?"
-              ls -lh $PY_BIN 2>&1 || true
-              
-              echo "file(py)"
-              file $PY_BIN 2>&1 || true
-              
-              echo "ldd(py)"
-              ldd $PY_BIN 2>&1 || true
-              
-              echo "exec (py)"
-              $PY_BIN -V 2>&1 || true
-              
+              echo "build failure"
+              ls -laR $(pwd)/Release/python || true
               exit 1
           }
          
