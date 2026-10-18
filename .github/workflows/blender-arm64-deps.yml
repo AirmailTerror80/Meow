@@ -61,6 +61,12 @@ jobs:
           max-size: 1G
           create-symlink: true
 
+      - name: Pre-load Flaky Archives
+        run: |
+          mkdir -p build_deps/packages
+         
+          curl -L --retry 5 "https://mirrors.kernel.org/gnu/gmp/gmp-6.3.0.tar.xz" -o build_deps/packages/gmp-6.3.0.tar.xz
+
       - name: Build Blender Dependencies
         run: |
           mkdir -p $(pwd)/bin
@@ -98,7 +104,7 @@ jobs:
           export PATH="$(pwd)/bin:/usr/lib/ccache:$PATH"
           export ISPC_EXTRA_ARGS="--target=neon --arch=aarch64"
           
-          mkdir -p build_deps && cd build_deps
+          cd build_deps
 
           export CC=clang
           export CXX=clang++
