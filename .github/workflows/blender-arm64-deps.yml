@@ -110,7 +110,6 @@ jobs:
           export CXX=clang++
           
           cmake ../blender/build_files/build_environment \
-            -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
@@ -118,9 +117,7 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DBUILD_SYCL=OFF
             
-          ninja external_python
-          
-          ninja
+          make -j(nproc)
          
       - name: Create Release Tarball
         run: |
