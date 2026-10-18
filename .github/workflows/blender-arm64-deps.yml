@@ -117,7 +117,7 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DBUILD_SYCL=OFF
             
-          make -j(nproc)
+          make -j$(nproc)
          
       - name: Create Release Tarball
         run: |
