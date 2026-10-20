@@ -120,7 +120,10 @@ jobs:
             -DBUILD_SYCL=OFF
 
           make -j$(nproc) external_python
-          make -j$(nproc)
+          make -j$(nproc) || {
+            cat $(pwd)/build/zstandard/src/external_zstandard-stamp/external_zstandard-build-*.log 2>/dev/null || true
+            exit 1
+          }
          
       - name: Create Release Tarball
         run: |
