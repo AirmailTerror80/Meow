@@ -124,8 +124,8 @@ jobs:
 
           PY_BIN="$(pwd)/Release/python/bin/python3.13"
           
-          $PY_BIN -m ensurepip || true
-          $PY_BIN -m pip install packaging jinja2 markupsafe || true
+          $PY_BIN -m ensurepip
+          $PY_BIN -m pip install setuptools wheel packaging jinja2 markupsafe
           
           make -j$(nproc) || {
             cat $(pwd)/build/zstandard/src/external_zstandard-stamp/external_zstandard-build-*.log 2>/dev/null || true
