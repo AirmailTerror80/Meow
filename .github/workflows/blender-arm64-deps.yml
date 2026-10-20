@@ -37,10 +37,6 @@ jobs:
         run: |
           cd blender
           
-          #find build_files/cmake -type f -name "*.cmake" -exec sed -i -E 's|-fuse-ld=gold|-fuse-ld=lld|g' {} +
-
-          grep -rn "fuse-ld=gold" build_files/cmake/ || echo "____NO-GOLD____"
-          
           find build_files/build_environment/cmake -name "*.cmake" -type f -exec sed -i -E \
             -e 's|\$\{SOURCE_DIR\}/configure |\$\{SOURCE_DIR\}/configure --build=aarch64-unknown-linux-gnu |g' \
             -e 's|\./configure |\./configure --build=aarch64-unknown-linux-gnu |g' \
@@ -71,7 +67,7 @@ jobs:
         run: |
           mkdir -p build_deps/packages
          
-          curl -L --retry 5 "https://mirrors.kernel.org/gnu/gmp/gmp-6.3.0.tar.xz" -o build_deps/packages/gmp-6.3.0.tar.xz
+          curl -L "https://mirrors.kernel.org/gnu/gmp/gmp-6.3.0.tar.xz" -o build_deps/packages/gmp-6.3.0.tar.xz
 
       - name: Build Blender Dependencies
         run: |
@@ -89,23 +85,23 @@ jobs:
           EOF
           chmod +x $(pwd)/bin/clang++
           
-          ln -sf $(pwd)/bin/clang $(pwd)/bin/cc
-          ln -sf $(pwd)/bin/clang $(pwd)/bin/gcc
-          ln -sf $(pwd)/bin/clang++ $(pwd)/bin/c++
-          ln -sf $(pwd)/bin/clang++ $(pwd)/bin/g++
+          sudo ln -sf $(pwd)/bin/clang /usr/bin/gcc
+          sudo ln -sf $(pwd)/bin/clang /usr/bin/cc
+          sudo ln -sf $(pwd)/bin/clang /usr/bin/aarch64-linux-gnu-gcc
+          sudo ln -sf $(pwd)/bin/clang /usr/bin/aarch64-linux-gnu-cc
           
-          ln -sf $(pwd)/bin/clang $(pwd)/bin/aarch64-linux-gnu-gcc
-          ln -sf $(pwd)/bin/clang $(pwd)/bin/aarch64-linux-gnu-cc
-          ln -sf $(pwd)/bin/clang++ $(pwd)/bin/aarch64-linux-gnu-g++
-          ln -sf $(pwd)/bin/clang++ $(pwd)/bin/aarch64-linux-gnu-c++
+          sudo ln -sf $(pwd)/bin/clang++ /usr/bin/g++
+          sudo ln -sf $(pwd)/bin/clang++ /usr/bin/c++
+          sudo ln -sf $(pwd)/bin/clang++ /usr/bin/aarch64-linux-gnu-g++
+          sudo ln -sf $(pwd)/bin/clang++ /usr/bin/aarch64-linux-gnu-c++
 
           for tool in ar ranlib nm strip objcopy objdump readelf size strings; do
-            ln -sf "/usr/bin/llvm-$tool" "$(pwd)/bin/$tool"
-            ln -sf "/usr/bin/llvm-$tool" "$(pwd)/bin/aarch64-linux-gnu-$tool"
+            sudo ln -sf /usr/bin/llvm-$tool /usr/bin/$tool
+            sudo ln -sf /usr/bin/llvm-$tool /usr/bin/aarch64-linux-gnu-$tool
           done
-          
-          ln -sf /usr/bin/ld.lld $(pwd)/bin/ld
-          ln -sf /usr/bin/ld.lld $(pwd)/bin/aarch64-linux-gnu-ld
+
+          sudo ln -sf /usr/bin/ld.lld /usr/bin/ld
+          sudo ln -sf /usr/bin/ld.lld /usr/bin/aarch64-linux-gnu-ld
           
           export PATH="$(pwd)/bin:/usr/lib/ccache:$PATH"
           export ISPC_EXTRA_ARGS="--target=neon --arch=aarch64"
@@ -114,15 +110,6 @@ jobs:
 
           export CC=clang
           export CXX=clang++
-          export LD="ld.lld"
-          export AR="llvm-ar"
-          export NM="llvm-nm"
-          export RANLIB="llvm-ranlib"
-          export STRIP="llvm-strip"
-          export OBJCOPY="llvm-objcopy"
-          export OBJDUMP="llvm-objdump"
-          export READELF="llvm-readelf"
-          export STRINGS="llvm-strings"
           export LDFLAGS="-fuse-ld=lld -Wl,--undefined-version"
           
           cmake ../blender/build_files/build_environment \
@@ -140,10 +127,7 @@ jobs:
           $PY_BIN -m ensurepip
           $PY_BIN -m pip install setuptools wheel packaging jinja2 markupsafe
           
-          make -j$(nproc) || {
-            cat $(pwd)/build/zstandard/src/external_zstandard-stamp/external_zstandard-build-*.log 2>/dev/null || true
-            exit 1
-          }
+          make -j$(nproc)
          
       - name: Create Release Tarball
         run: |
