@@ -28,7 +28,7 @@ jobs:
             flex file asciidoc docbook-xml docbook-xsl clang llvm lld \
             libx11-dev libxcursor-dev libxi-dev libxinerama-dev \
             libxrandr-dev libxxf86vm-dev libwayland-dev libxt-dev \
-            wayland-protocols libxkbcommon-dev libdbus-1-dev \
+            wayland-protocols libxkbcommon-dev libdbus-1-dev libpixman-1-dev \
             libegl-dev libvulkan-dev python3-mako python3-docutils \
             libpulse-dev libasound2-dev libjack-dev libpipewire-0.3-dev libdbus-1-dev \
             libc6-dev-armhf-cross linux-libc-dev-armhf-cross gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
@@ -111,6 +111,16 @@ jobs:
 
           export CC=clang
           export CXX=clang++
+          export LD="ld.lld"
+          export AR="llvm-ar"
+          export NM="llvm-nm"
+          export RANLIB="llvm-ranlib"
+          export STRIP="llvm-strip"
+          export OBJCOPY="llvm-objcopy"
+          export OBJDUMP="llvm-objdump"
+          export READELF="llvm-readelf"
+          export STRINGS="llvm-strings"
+          export LDFLAGS="-fuse-ld=lld"
           
           cmake ../blender/build_files/build_environment \
             -DCMAKE_BUILD_TYPE=Release \
