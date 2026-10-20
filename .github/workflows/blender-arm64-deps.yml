@@ -37,7 +37,10 @@ jobs:
         run: |
           cd blender
           
-          find build_files/cmake -type f -name "*.cmake" -exec sed -i -E 's|-fuse-ld=gold|-fuse-ld=lld|g' {} +
+          #find build_files/cmake -type f -name "*.cmake" -exec sed -i -E 's|-fuse-ld=gold|-fuse-ld=lld|g' {} +
+
+          grep -rn "fuse-ld=gold" build_files/cmake/ || echo "____NO-GOLD____"
+          
           find build_files/build_environment/cmake -name "*.cmake" -type f -exec sed -i -E \
             -e 's|\$\{SOURCE_DIR\}/configure |\$\{SOURCE_DIR\}/configure --build=aarch64-unknown-linux-gnu |g' \
             -e 's|\./configure |\./configure --build=aarch64-unknown-linux-gnu |g' \
@@ -120,7 +123,7 @@ jobs:
           export OBJDUMP="llvm-objdump"
           export READELF="llvm-readelf"
           export STRINGS="llvm-strings"
-          export LDFLAGS="-fuse-ld=lld"
+          export LDFLAGS="-fuse-ld=lld -Wl,--undefined-version"
           
           cmake ../blender/build_files/build_environment \
             -DCMAKE_BUILD_TYPE=Release \
