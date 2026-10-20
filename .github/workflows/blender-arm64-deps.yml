@@ -63,7 +63,7 @@ jobs:
           max-size: 1G
           create-symlink: true
 
-      - name: Pre-load Flaky Archives
+      - name: Pre-load Archives
         run: |
           mkdir -p build_deps/packages
          
@@ -118,7 +118,8 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DBUILD_SYCL=OFF
-            
+
+          make -j$(nproc) external_python
           make -j$(nproc)
          
       - name: Create Release Tarball
