@@ -30,7 +30,7 @@ jobs:
             libinput-dev libevdev-dev libmtdev-dev libseat-dev \
             libxrandr-dev libxxf86vm-dev libwayland-dev libxt-dev \
             wayland-protocols libxkbcommon-dev libdbus-1-dev libpixman-1-dev \
-            libegl-dev libvulkan-dev python3-mako python3-docutils \
+            libegl-dev libvulkan-dev python3-mako python3-docutils libdrm-dev libgbm-dev\
             libpulse-dev libasound2-dev libjack-dev libpipewire-0.3-dev libdbus-1-dev \
             libc6-dev-armhf-cross linux-libc-dev-armhf-cross gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
             
@@ -61,7 +61,7 @@ jobs:
         with:
           key: ${{ runner.os }}-aarch64-blender-5.2-deps
           restore-keys: ccache-Linux-aarch64-blender-5.2-deps
-          max-size: 1G
+          max-size: 1.5G
           create-symlink: true
 
       - name: Pre-load Archives
@@ -76,13 +76,13 @@ jobs:
           
           cat << 'EOF' > $(pwd)/bin/clang
           #!/bin/bash
-          exec ccache /usr/bin/clang "$@"
+          exec ccache /usr/bin/clang "$@" -march=armv8-a
           EOF
           chmod +x $(pwd)/bin/clang
 
           cat << 'EOF' > $(pwd)/bin/clang++
           #!/bin/bash
-          exec ccache /usr/bin/clang++ "$@"
+          exec ccache /usr/bin/clang++ "$@" -march=armv8-a
           EOF
           chmod +x $(pwd)/bin/clang++
           
@@ -105,13 +105,14 @@ jobs:
           sudo ln -sf /usr/bin/ld.lld /usr/bin/aarch64-linux-gnu-ld
           
           export PATH="$(pwd)/bin:/usr/lib/ccache:$PATH"
-          export ISPC_EXTRA_ARGS="--target=neon --arch=aarch64"
           
           cd build_deps
 
           export CC=clang
           export CXX=clang++
           export LDFLAGS="-fuse-ld=lld -Wl,--undefined-version"
+
+          export ISPC_EXTRA_ARGS="--target=neon --arch=aarch64"
           
           cmake ../blender/build_files/build_environment \
             -DCMAKE_BUILD_TYPE=Release \
