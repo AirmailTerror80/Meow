@@ -27,7 +27,7 @@ jobs:
             pkg-config ninja-build xutils-dev xsltproc xmlto help2man \
             flex file asciidoc docbook-xml docbook-xsl clang llvm lld \
             libx11-dev libxcursor-dev libxi-dev libxinerama-dev libudev-dev \
-            libinput-dev libevdev-dev libmtdev-dev libseat-dev \
+            libinput-dev libevdev-dev libmtdev-dev libseat-dev libcairo2-dev  \
             libxrandr-dev libxxf86vm-dev libwayland-dev libxt-dev \
             wayland-protocols libxkbcommon-dev libdbus-1-dev libpixman-1-dev \
             libegl-dev libvulkan-dev python3-mako python3-docutils libdrm-dev libgbm-dev\
