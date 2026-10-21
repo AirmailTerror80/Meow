@@ -76,13 +76,13 @@ jobs:
           
           cat << 'EOF' > $(pwd)/bin/clang
           #!/bin/bash
-          exec ccache /usr/bin/clang "$@" -march=armv8-a
+          exec ccache /usr/bin/clang "$@"
           EOF
           chmod +x $(pwd)/bin/clang
 
           cat << 'EOF' > $(pwd)/bin/clang++
           #!/bin/bash
-          exec ccache /usr/bin/clang++ "$@" -march=armv8-a
+          exec ccache /usr/bin/clang++ "$@"
           EOF
           chmod +x $(pwd)/bin/clang++
           
