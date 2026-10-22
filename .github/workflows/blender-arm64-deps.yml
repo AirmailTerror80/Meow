@@ -18,21 +18,23 @@ jobs:
 
       - name: Install Host-side Packages
         run: |
-          sudo dpkg --add-architecture armhf
           sudo apt-get update -qq
           
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -yqq --no-install-recommends \
             build-essential cmake ccache git subversion curl xz-utils bzip2 patch \
+            clang llvm lld pkg-config ninja-build flex file \
             bison yasm tcl autoconf automake m4 meson patchelf gettext autopoint \
-            pkg-config ninja-build xutils-dev xsltproc xmlto help2man \
-            flex file asciidoc docbook-xml docbook-xsl clang llvm lld \
-            libx11-dev libxcursor-dev libxi-dev libxinerama-dev libudev-dev \
-            libinput-dev libevdev-dev libmtdev-dev libseat-dev libcairo2-dev  \
-            libxrandr-dev libxxf86vm-dev libwayland-dev libxt-dev \
-            wayland-protocols libxkbcommon-dev libdbus-1-dev libpixman-1-dev \
-            libegl-dev libvulkan-dev python3-mako python3-docutils libdrm-dev libgbm-dev\
-            libpulse-dev libasound2-dev libjack-dev libpipewire-0.3-dev libdbus-1-dev \
-            libc6-dev-armhf-cross linux-libc-dev-armhf-cross gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+            xutils-dev xsltproc xmlto help2man asciidoc docbook-xml docbook-xsl \
+            python3-mako python3-docutils \
+            libudev-dev libinput-dev libevdev-dev libmtdev-dev libseat-dev libpixman-1-dev \
+            libpulse-dev libasound2-dev libjack-dev libpipewire-0.3-dev \
+            libwayland-dev wayland-protocols libxkbcommon-dev libdbus-1-dev \
+            libx11-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev \
+            libxxf86vm-dev libxt-dev libxext-dev libxrender-dev libxfixes-dev \
+            libx11-xcb-dev libxcb-dri3-dev libxcb-present-dev libxshmfence-dev \
+            libgl1-mesa-dev libgl-dev libgles2-mesa-dev libgles-dev libegl-dev \
+            libglx-dev libopengl-dev libglu1-mesa-dev libvulkan-dev libdrm-dev libgbm-dev \
+            libcairo2-dev libpango1.0-dev libffi-dev
             
       - name: Target Compatibility Patches
         run: |
