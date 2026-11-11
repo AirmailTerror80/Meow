@@ -10,62 +10,62 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout Kernel Source
         uses: actions/checkout@v4
         with:
-          repository: 'AirmailTerror80/kernel_xiaomi_sm6225'
+          repository: 'alternoegraha/kernel_xiaomi_sm6225'
           ref: 'motregen'
           fetch-depth: 1
 
-      - name: Install Build Dependencies
+      - name: Install LLVM 20 + Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bison build-essential ccache \
-          curl flex git gnupg gperf libelf-dev libncurses5-dev \
-          libssl-dev libxml2-dev libxml2-utils lzop make ninja-build python3 zip zlib1g-dev
-      
-      - name: Download Toolchain
-        run: |
-          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git clang-toolchain
+          sudo apt-get install -yqq --no-install-recommends \
+            clang-20 lld-20 llvm-20 clang-20-doc \
+            bc bison build-essential ccache \
+            curl flex git gperf libelf-dev libncurses5-dev \
+            libssl-dev libxml2-dev libxml2-utils lzop make ninja-build python3 zip zlib1g-dev
 
       - name: Configure and Build Kernel
-        run: |
-          export PATH="$(pwd)/clang-toolchain/bin:$PATH"
-          export ARCH=arm64
-          export SUBARCH=arm64
-          
+        run: |          
           mkdir -p out
 
           cat > arch/arm64/configs/vendor/cust.config << EOF
           CONFIG_BINFMT_MISC=y
-
           CONFIG_KCMP=y
           CONFIG_CHECKPOINT_RESTORE=y
+
+          CONFIG_TOUCHSCREEN_NT36xxx_HOSTDL_SPI=y
+          CONFIG_TOUCHSCREEN_NT36xxx_HOSTDL_SPI_FW_UPDATE=y
+          # CONFIG_TOUCHSCREEN_FTS is not set
+          # CONFIG_TOUCHSCREEN_FTS_SPI is not set
           EOF
           
           make O=out ARCH=arm64 ${{ github.event.inputs.defconfig }}
 
+          grep -E "NT36xxx_HOSTDL_SPI|TOUCHSCREEN_FTS" out/.config || true
+
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
             SUBARCH=arm64 \
-            CC=clang \
-            HOSTCC=clang \
-            HOSTCXX=clang++ \
-            LD=ld.lld \
-            AR=llvm-ar \
-            NM=llvm-nm \
-            OBJCOPY=llvm-objcopy \
-            OBJDUMP=llvm-objdump \
-            STRIP=llvm-strip \
+            CC=clang-20 \
+            HOSTCC=clang-20 \
+            HOSTCXX=clang++-20 \
+            LD=ld.lld-20 \
+            AR=llvm-ar-20 \
+            NM=llvm-nm-20 \
+            OBJCOPY=llvm-objcopy-20 \
+            OBJDUMP=llvm-objdump-20 \
+            STRIP=llvm-strip-20 \
             LLVM=1 \
             LLVM_IAS=1
 
       - name: Verify Output Files
         run: |
-          echo "=== Built Binaries ==="
           ls -lh out/arch/arm64/boot || true
+          find out -name "nt36xxx*.o" || true
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
