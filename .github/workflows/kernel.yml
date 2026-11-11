@@ -19,7 +19,7 @@ jobs:
           ref: 'motregen'
           fetch-depth: 1
 
-      - name: Install LLVM 20 + Build Dependencies
+      - name: Build Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -yqq --no-install-recommends \
@@ -39,8 +39,8 @@ jobs:
 
           CONFIG_TOUCHSCREEN_NT36xxx_HOSTDL_SPI=y
           CONFIG_TOUCHSCREEN_NT36xxx_HOSTDL_SPI_FW_UPDATE=y
-          # CONFIG_TOUCHSCREEN_FTS is not set
-          # CONFIG_TOUCHSCREEN_FTS_SPI is not set
+          CONFIG_TOUCHSCREEN_FTS=y
+          CONFIG_TOUCHSCREEN_FTS_SPI=y
           EOF
           
           make O=out ARCH=arm64 ${{ github.event.inputs.defconfig }}
