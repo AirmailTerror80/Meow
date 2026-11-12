@@ -28,49 +28,67 @@ jobs:
             curl flex git gperf libelf-dev libncurses5-dev \
             libssl-dev libxml2-dev libxml2-utils lzop make ninja-build python3 zip zlib1g-dev
 
-      - name: Configure and Build Kernel
-        run: |          
-          mkdir -p out
+      - name: Fetch CCache
+        uses: hendrikmuhs/ccache-action@v1.2.23
+        with:
+          key: ${{ runner.os }}-kernel-fog-clang20
+          restore-keys: ${{ runner.os }}-kernel-fog-clang20
+          max-size: 1G
+          create-symlink: true
 
+      - name: Configure and Build Kernel
+        run: |
+          mkdir -p $(pwd)/bin
+
+          cat << 'EOF' > $(pwd)/bin/clang
+          #!/bin/bash
+          exec ccache /usr/bin/clang-20 "$@"
+          EOF
+          chmod +x $(pwd)/bin/clang
+
+          cat << 'EOF' > $(pwd)/bin/clang++
+          #!/bin/bash
+          exec ccache /usr/bin/clang++-20 "$@"
+          EOF
+          chmod +x $(pwd)/bin/clang++
+
+          export PATH="$(pwd)/bin:$PATH"
+          export CC=clang
+          export CXX=clang++
+          
           cat > arch/arm64/configs/vendor/cust.config << EOF
           CONFIG_BINFMT_MISC=y
           CONFIG_KCMP=y
           CONFIG_CHECKPOINT_RESTORE=y
-
-          CONFIG_TOUCHSCREEN_NT36XXX=y
           CONFIG_TOUCHSCREEN_NT36xxx_HOSTDL_SPI=y
           CONFIG_TOUCHSCREEN_NT36xxx_HOSTDL_SPI_FW_UPDATE=y
-
+          # CONFIG_TOUCHSCREEN_NT36XXX is not set
           # CONFIG_TOUCHSCREEN_FTS is not set
           # CONFIG_TOUCHSCREEN_FTS_SPI is not set
           EOF
           
           make O=out ARCH=arm64 ${{ github.event.inputs.defconfig }}
 
-          grep -E "NT36xxx_HOSTDL_SPI|TOUCHSCREEN_FTS|TOUCHSCREEN_NT36XXX" out/.config || true
-
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
-            SUBARCH=arm64 \
-            CC=clang-20 \
-            HOSTCC=clang-20 \
-            HOSTCXX=clang++-20 \
-            LD=ld.lld-20 \
-            AR=llvm-ar-20 \
-            NM=llvm-nm-20 \
-            OBJCOPY=llvm-objcopy-20 \
-            OBJDUMP=llvm-objdump-20 \
-            STRIP=llvm-strip-20 \
             LLVM=1 \
             LLVM_IAS=1
 
-      - name: Verify Output Files
+      - name: Output Files
         run: |
           ls -lh out/arch/arm64/boot || true
-          find out -name "nt36xxx*.o" || true
-      - name: Upload Artifacts
+          
+          find out -name "*nt36*" || true
+          find out -name "*nt36525*" || true
+
+          find out -name "*.o" -path "*nt36*" || true
+          find out -name "*.o" -path "*nt36535*" || true
+
+          grep -E "NT36xxx_HOSTDL_SPI|TOUCHSCREEN_FTS|TOUCHSCREEN_NT36XXX" out/.config || true
+          
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: compiled-kernel
+          name: kernel-fog
           path: |
             out/arch/arm64/boot/*
