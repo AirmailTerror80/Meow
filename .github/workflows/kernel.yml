@@ -36,6 +36,17 @@ jobs:
           max-size: 1G
           create-symlink: true
 
+      - name: Find FTS driver files
+        run: |
+          echo -e 'fts dir\n\n'
+          find drivers/input/touchscreen -type d \( -name "*fts*" -o -name "*focal*" \) || true
+          echo -e '\nfts files\n\n'
+          ls -R drivers/input/touchscreen/ | grep -i -E "fts|focal" || true
+          echo -e '\nfwupg\n\n'
+          grep -rn "fts_fwupg_work\|fts_fwupg_init\|fw upgrade work" drivers/input/touchscreen/ --include="*.c" | head -n 30 || true
+          echo -e '\ncharger mode\n\n'
+          grep -rn "lct_fts_set_charger_mode" drivers/input/touchscreen/ --include="*.c" | head -n 20 || true
+          
       - name: Configure and Build Kernel
         run: |
           mkdir -p $(pwd)/bin
@@ -64,11 +75,6 @@ jobs:
           CONFIG_BINFMT_MISC=y
           CONFIG_KCMP=y
           CONFIG_CHECKPOINT_RESTORE=y
-          CONFIG_TOUCHSCREEN_NT36xxx_HOSTDL_SPI=y
-          CONFIG_TOUCHSCREEN_NT36xxx_HOSTDL_SPI_FW_UPDATE=y
-          # CONFIG_TOUCHSCREEN_NT36XXX is not set
-          # CONFIG_TOUCHSCREEN_FTS is not set
-          # CONFIG_TOUCHSCREEN_FTS_SPI is not set
           EOF
           
           make O=out ARCH=arm64 ${{ github.event.inputs.defconfig }}
@@ -77,18 +83,6 @@ jobs:
             ARCH=arm64 \
             LLVM=1 \
             LLVM_IAS=1
-
-      - name: Output Files
-        run: |
-          ls -lh out/arch/arm64/boot || true
-          
-          find out -name "*nt36*" || true
-          find out -name "*nt36525*" || true
-
-          find out -name "*.o" -path "*nt36*" || true
-          find out -name "*.o" -path "*nt36535*" || true
-
-          grep -E "NT36xxx_HOSTDL_SPI|TOUCHSCREEN_FTS|TOUCHSCREEN_NT36XXX" out/.config || true
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
