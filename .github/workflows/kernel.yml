@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Kernel Source
         uses: actions/checkout@v4
@@ -23,7 +23,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -yqq --no-install-recommends \
-            clang-20 lld-20 llvm-20 clang-20-doc \
             bc bison build-essential ccache \
             curl flex git gperf libelf-dev libncurses5-dev \
             libssl-dev libxml2-dev libxml2-utils lzop make ninja-build python3 zip zlib1g-dev
@@ -31,74 +30,65 @@ jobs:
       - name: Fetch CCache
         uses: hendrikmuhs/ccache-action@v1.2.23
         with:
-          key: ${{ runner.os }}-kernel-fog-clang20
-          restore-keys: ${{ runner.os }}-kernel-fog-clang20
+          key: ${{ runner.os }}-kernel-fog-clang-r584948
+          restore-keys: ${{ runner.os }}-kernel-fog-clang-r584948
           max-size: 1G
           create-symlink: true
 
-      - name: Find FTS driver files
+      - name: Get clang-r584948
         run: |
-          echo -e 'fts dir\n\n'
-          find drivers/input/touchscreen -type d \( -name "*fts*" -o -name "*focal*" \) || true
-          echo -e '\nfts files\n\n'
-          ls -R drivers/input/touchscreen/ | grep -i -E "fts|focal" || true
-          echo -e '\nfwupg\n\n'
-          grep -rn "fts_fwupg_work\|fts_fwupg_init\|fw upgrade work" drivers/input/touchscreen/ --include="*.c" | head -n 30 || true
-          echo -e '\ncharger mode\n\n'
-          grep -rn "lct_fts_set_charger_mode" drivers/input/touchscreen/ --include="*.c" | head -n 20 || true
-
+          git clone --depth 1 --filter=blob:none --sparse https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 $HOME/clang-src
+          
+          cd $HOME/clang-src
+          git sparse-checkout set clang-r584948
+          
+          cd -
+          mkdir -p $(pwd)/bin
+          
+          cat << 'EOF' > $(pwd)/bin/clang
+          #!/bin/bash
+          exec ccache $HOME/clang-src/clang-r584948/bin/clang "$@"
+          EOF
+          chmod +x $(pwd)/bin/clang
+          
+          cat << 'EOF' > $(pwd)/bin/clang++
+          #!/bin/bash
+          exec ccache $HOME/clang-src/clang-r584948/bin/clang++ "$@"
+          EOF
+          chmod +x $(pwd)/bin/clang++
+          
       - name: Patch FTS panel FW
         run: |
-          echo -e 'patch fwupg\n\n'
           python3 - << 'PY'
           import pathlib
           p = pathlib.Path("drivers/input/touchscreen/ft8006s_spi/focaltech_flash.c")
           t = p.read_text()
           old = "int fts_fwupg_init(struct fts_ts_data *ts_data)"
           assert old in t, "fts_fwupg_init not found"
-          t = t.replace(old, old + "\n{\n    FTS_INFO(\"fw upgrade disabled - keep replacement panel FW\");\n    return 0;\n}\nint fts_fwupg_init_disabled(struct fts_ts_data *ts_data)", 1)
+          t = t.replace(old, old + "\n{\n    return 0;\n}\nint fts_fwupg_init_disabled(struct fts_ts_data *ts_data)", 1)
           p.write_text(t)
           print("patched fwupg")
           PY
-          grep -n "fw upgrade disabled" drivers/input/touchscreen/ft8006s_spi/focaltech_flash.c || true
-          
+
       - name: Configure and Build Kernel
         run: |
-          mkdir -p $(pwd)/bin
-
-          cat << 'EOF' > $(pwd)/bin/clang
-          #!/bin/bash
-          exec ccache /usr/bin/clang-20 "$@"
-          EOF
-          chmod +x $(pwd)/bin/clang
-
-          cat << 'EOF' > $(pwd)/bin/clang++
-          #!/bin/bash
-          exec ccache /usr/bin/clang++-20 "$@"
-          EOF
-          chmod +x $(pwd)/bin/clang++
-
-          for tool in ld.lld llvm-ar llvm-nm llvm-objcopy llvm-objdump llvm-strip llvm-readelf llvm-addr2line; do
-            ln -sf /usr/bin/${tool}-20 $(pwd)/bin/${tool}
-          done
-          
-          export PATH="$(pwd)/bin:$PATH"
+          export PATH="$(pwd)/bin:$HOME/clang-src/clang-r584948/bin:$PATH"
           export CC=clang
           export CXX=clang++
-          
+
           cat > arch/arm64/configs/vendor/cust.config << EOF
           CONFIG_BINFMT_MISC=y
           CONFIG_KCMP=y
           CONFIG_CHECKPOINT_RESTORE=y
           EOF
-          
+
           make O=out ARCH=arm64 ${{ github.event.inputs.defconfig }}
 
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
             LLVM=1 \
             LLVM_IAS=1
-          
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
