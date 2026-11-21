@@ -52,6 +52,10 @@ jobs:
           EOF
           chmod +x $(pwd)/bin/clang++
 
+          for tool in ld.lld llvm-ar llvm-nm llvm-objcopy llvm-objdump llvm-strip llvm-readelf llvm-addr2line; do
+            ln -sf /usr/bin/${tool}-20 $(pwd)/bin/${tool}
+          done
+          
           export PATH="$(pwd)/bin:$PATH"
           export CC=clang
           export CXX=clang++
