@@ -46,6 +46,21 @@ jobs:
           grep -rn "fts_fwupg_work\|fts_fwupg_init\|fw upgrade work" drivers/input/touchscreen/ --include="*.c" | head -n 30 || true
           echo -e '\ncharger mode\n\n'
           grep -rn "lct_fts_set_charger_mode" drivers/input/touchscreen/ --include="*.c" | head -n 20 || true
+
+      - name: Patch FTS panel FW
+        run: |
+          echo -e 'patch fwupg\n\n'
+          python3 - << 'PY'
+          import pathlib
+          p = pathlib.Path("drivers/input/touchscreen/ft8006s_spi/focaltech_flash.c")
+          t = p.read_text()
+          old = "int fts_fwupg_init(struct fts_ts_data *ts_data)"
+          assert old in t, "fts_fwupg_init not found"
+          t = t.replace(old, old + "\n{\n    FTS_INFO(\"fw upgrade disabled - keep replacement panel FW\");\n    return 0;\n}\nint fts_fwupg_init_disabled(struct fts_ts_data *ts_data)", 1)
+          p.write_text(t)
+          print("patched fwupg")
+          PY
+          grep -n "fw upgrade disabled" drivers/input/touchscreen/ft8006s_spi/focaltech_flash.c || true
           
       - name: Configure and Build Kernel
         run: |
